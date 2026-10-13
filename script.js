@@ -4,7 +4,7 @@
   const state = { stream: null, photo: null, frame: "classic", startingCamera: false };
   const $ = (selector) => document.querySelector(selector);
   const screens = ["welcome", "capture", "frames", "result", "thanks"];
-  const caption = "Eu fui ao Cantinho da Nutri! ❤️ @CANTINHO #REINAUGURAÇÃODOCANTINHO";
+  const caption = "Eu fui ao Cantinho da Nutri! ❤️ @cantinhodanutricafeteria #VocêNoCantinho"; 
 
   const frames = [
     { id: "classic", name: "Eu fui ao Cantinho", accent: "#5b321f", line: "Eu fui ao Cantinho!" },
