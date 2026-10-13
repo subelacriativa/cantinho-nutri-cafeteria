@@ -176,7 +176,7 @@
     ctx.fillText(selected.line, W / 2, H - 143, W - 70);
 
     // Hashtag e @ em tamanho maior, com ajuste automático para telas estreitas.
-    const socialText = "@CANTINHO  •  #REINAUGURAÇÃODOCANTINHO";
+    const socialText = "@cantinhodanutricafeteria  •  #VocêNoCantinho";
     let socialSize = 31;
     do {
       ctx.font = `700 ${socialSize}px 'DM Sans', Arial, sans-serif`;
