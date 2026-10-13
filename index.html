@@ -5,18 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#5b321f">
   <meta name="description" content="Experiência interativa de reinauguração do Cantinho da Nutri e Cafeteria.">
+  <meta name="color-scheme" content="light">
   <title>Cantinho da Nutri e Cafeteria — Reinauguração</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
   <main class="app-shell">
     <section id="welcome" class="screen screen--welcome active">
       <div class="hero-card">
         <div class="brand-lockup">
-          <img src="assets/logo.png" alt="Cantinho da Nutri" class="brand-logo">
+          <img src="assets/logo.png" alt="Cantinho da Nutri" class="brand-logo" onerror="this.hidden=true">
           <div class="brand-name">Cantinho da Nutri <span>e Cafeteria</span></div>
         </div>
         <div class="hero-copy">
@@ -24,14 +26,14 @@
           <h1>Você está no<br><em>Cantinho!</em> 📸</h1>
           <p>Registre este momento, escolha uma moldura especial e leve uma lembrança da nossa nova fase.</p>
         </div>
-        <button class="btn btn--primary" id="startBtn">Começar <span>→</span></button>
-        <p class="tiny">Ao continuar, você poderá escolher entre usar a câmera ou uma foto do aparelho.</p>
+        <button class="btn btn--primary" id="startBtn" type="button">Começar <span>→</span></button>
+        <p class="tiny">Você pode tirar uma foto ou escolher uma imagem do seu aparelho.</p>
       </div>
     </section>
 
     <section id="capture" class="screen">
       <div class="topbar">
-        <button class="icon-btn" data-back="welcome" aria-label="Voltar">←</button>
+        <button class="icon-btn" data-back="welcome" aria-label="Voltar" type="button">←</button>
         <div class="mini-brand">Cantinho da Nutri <span>e Cafeteria</span></div>
         <span class="step">1/3</span>
       </div>
@@ -39,7 +41,6 @@
         <p class="eyebrow">SEU MOMENTO</p>
         <h2>Tire uma selfie! 📸</h2>
         <p class="muted">Posicione-se e registre esse momento especial no Cantinho.</p>
-
         <div class="camera-wrap">
           <div class="camera-card">
             <video id="video" playsinline autoplay muted></video>
@@ -47,19 +48,20 @@
             <div class="camera-placeholder" id="cameraPlaceholder">
               <span>📷</span>
               <strong>Prepare-se para sua foto!</strong>
-              <small>A câmera será ativada automaticamente.</small>
+              <small>Permita o acesso à câmera ou escolha uma foto da galeria.</small>
             </div>
           </div>
-          <button class="btn btn--light btn--full camera-capture-btn" id="cameraBtn">Tirar foto</button>
+          <button class="btn btn--light btn--full camera-capture-btn" id="cameraBtn" type="button">Ativar câmera</button>
+          <button class="btn btn--outline btn--full gallery-btn" id="galleryBtn" type="button">Escolher foto da galeria</button>
           <input type="file" id="fileInput" accept="image/*" capture="user" hidden>
         </div>
-        <p class="privacy-note">🔒 A foto é processada no seu aparelho para criar a lembrança.</p>
+        <p class="privacy-note">🔒 A foto é processada no seu aparelho. Ela não é enviada para um servidor.</p>
       </div>
     </section>
 
     <section id="frames" class="screen">
       <div class="topbar">
-        <button class="icon-btn" data-back="capture" aria-label="Voltar">←</button>
+        <button class="icon-btn" data-back="capture" aria-label="Voltar" type="button">←</button>
         <div class="mini-brand">Escolha sua moldura</div>
         <span class="step">2/3</span>
       </div>
@@ -67,32 +69,34 @@
         <p class="eyebrow">PERSONALIZE</p>
         <h2>Escolha uma moldura ☕</h2>
         <p class="muted">Toque na opção que mais combina com você.</p>
-        <div class="frame-grid" id="frameGrid"></div>
-        <button class="btn btn--primary btn--full" id="applyFrameBtn">Usar esta moldura →</button>
+        <div class="frame-grid" id="frameGrid" aria-label="Opções de moldura"></div>
+        <button class="btn btn--primary btn--full" id="applyFrameBtn" type="button">Usar esta moldura →</button>
       </div>
     </section>
 
     <section id="result" class="screen">
       <div class="topbar">
-        <button class="icon-btn" data-back="frames" aria-label="Voltar">←</button>
+        <button class="icon-btn" data-back="frames" aria-label="Voltar" type="button">←</button>
         <div class="mini-brand">Sua lembrança</div>
         <span class="step">3/3</span>
       </div>
       <div class="content">
         <p class="eyebrow">FICOU LINDA! ❤️</p>
         <h2>Essa lembrança é sua.</h2>
-        <p class="muted">Salve a imagem e compartilhe esse momento especial.</p>
+        <p class="muted">Baixe a imagem ou compartilhe pelo menu do seu aparelho.</p>
         <div class="result-card">
-          <canvas id="resultCanvas"></canvas>
+          <canvas id="resultCanvas" aria-label="Prévia da foto com moldura"></canvas>
         </div>
         <div class="result-actions">
-          <button class="btn btn--primary btn--full" id="downloadBtn">⬇ Baixar imagem</button>
-          <button class="btn btn--instagram btn--full" id="shareBtn">♡ Compartilhar no Instagram</button>
-          <button class="btn btn--outline btn--full" id="newPhotoBtn">↻ Fazer outra foto</button>
+          <button class="btn btn--primary btn--full" id="downloadBtn" type="button">⬇ Baixar imagem</button>
+          <button class="btn btn--instagram btn--full" id="shareBtn" type="button">♡ Compartilhar imagem</button>
+          <button class="btn btn--outline btn--full" id="newPhotoBtn" type="button">↻ Fazer outra foto</button>
         </div>
+        <p class="share-hint" id="shareHint">No Instagram, selecione a imagem salva e publique no Story ou no feed.</p>
         <div class="share-box">
           <strong>📲 Não esqueça!</strong>
           <p>Publique no Instagram e marque <b>@CANTINHO</b> e use <b>#REINAUGURAÇÃODOCANTINHO</b></p>
+          <button class="copy-caption-btn" id="copyCaptionBtn" type="button">Copiar legenda</button>
         </div>
         <div class="reward-box">
           <span class="reward-icon">🎁</span>
@@ -104,18 +108,17 @@
     <section id="thanks" class="screen">
       <div class="hero-card hero-card--thanks">
         <div class="brand-lockup">
-          <img src="assets/logo.png" alt="Cantinho da Nutri" class="brand-logo">
+          <img src="assets/logo.png" alt="Cantinho da Nutri" class="brand-logo" onerror="this.hidden=true">
           <div class="brand-name">Cantinho da Nutri <span>e Cafeteria</span></div>
         </div>
         <div class="success-mark">♥</div>
         <p class="eyebrow">OBRIGADO!</p>
         <h1>Você faz parte<br><em>dessa história.</em></h1>
         <p>Esperamos ver você muitas vezes por aqui. ☕</p>
-        <button class="btn btn--primary" id="restartBtn">Criar outra lembrança</button>
+        <button class="btn btn--primary" id="restartBtn" type="button">Criar outra lembrança</button>
       </div>
     </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="script.js"></script>
 </body>
 </html>
