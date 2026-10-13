@@ -1,31 +1,341 @@
-const state={stream:null,photo:null,frame:'classic'};
-const $=s=>document.querySelector(s);
-const screens=['welcome','capture','frames','result','thanks'];
-function show(id){screens.forEach(x=>$('#'+x).classList.toggle('active',x===id));window.scrollTo({top:0,behavior:'smooth'});if(id==='capture'&&!state.stream&&!state.photo){startCamera();}}
-function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
-function stopCamera(){if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null}const v=$('#video');v.pause();v.srcObject=null;v.style.display='none';$('#cameraPlaceholder').style.display='flex'}
-async function startCamera(){try{state.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});const v=$('#video');v.srcObject=state.stream;v.style.display='block';$('#cameraPlaceholder').style.display='none';await v.play();$('#cameraBtn').textContent='Tirar foto';$('#cameraBtn').onclick=captureFromVideo}catch(e){toast('Não foi possível abrir a câmera. Verifique a permissão do navegador.');$('#cameraBtn').textContent='Tirar foto';$('#cameraBtn').onclick=startCamera}}
-function captureFromVideo(){const v=$('#video'), c=$('#captureCanvas');c.width=v.videoWidth||720;c.height=v.videoHeight||960;const ctx=c.getContext('2d');ctx.save();ctx.translate(c.width,0);ctx.scale(-1,1);ctx.drawImage(v,0,0,c.width,c.height);ctx.restore();state.photo=c.toDataURL('image/jpeg',.92);stopCamera();prepareFrames();show('frames')}
-function loadFile(file){if(!file)return;const reader=new FileReader();reader.onload=e=>{state.photo=e.target.result;stopCamera();prepareFrames();show('frames')};reader.readAsDataURL(file)}
-const frames=[
- {id:'classic',name:'Eu fui ao Cantinho',accent:'#5b321f'},
- {id:'botanical',name:'Nova história',accent:'#697047'},
- {id:'minimal',name:'Reinauguração 2026',accent:'#8b5d3f'},
- {id:'coffee',name:'Café + carinho',accent:'#7b4b30'}
-];
-function drawFrame(canvas,img,frameId,preview=false){const W=800,H=960;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.fillStyle='#f6eddc';ctx.fillRect(0,0,W,H);const scale=Math.max(W/img.width,H*.78/img.height);const dw=img.width*scale,dh=img.height*scale;ctx.save();ctx.beginPath();ctx.roundRect(24,24,W-48,H-220,24);ctx.clip();ctx.drawImage(img,(W-dw)/2,35+(H-220-dh)/2,dw,dh);ctx.restore();
-ctx.fillStyle=frameId==='botanical'?'#697047':frameId==='minimal'?'#8b5d3f':'#5b321f';ctx.fillRect(0,H-180,W,180);
-ctx.fillStyle='#fffaf0';ctx.textAlign='center';ctx.font='700 44px Playfair Display, serif';ctx.fillText(frameId==='coffee'?'CAFÉ + CARINHO':'CANTINHO DA NUTRI',W/2,H-116);ctx.font='600 30px Caveat, cursive';ctx.fillText(frameId==='classic'?'Eu fui ao Cantinho!':frameId==='botanical'?'Faço parte dessa nova história.':frameId==='minimal'?'Reinauguração 2026':'Um momento para guardar ❤️',W/2,H-70);
-ctx.font='600 18px DM Sans, sans-serif';ctx.fillStyle='#e7d6bb';ctx.fillText('@CANTINHO • #REINAUGURAÇÃODOCANTINHO',W/2,H-32);ctx.strokeStyle='#d7b889';ctx.lineWidth=5;ctx.strokeRect(15,15,W-30,H-30);}
-function prepareFrames(){const grid=$('#frameGrid');grid.innerHTML='';const img=new Image();img.onload=()=>frames.forEach((f,i)=>{const b=document.createElement('button');b.className='frame-option'+(i===0?' selected':'');b.dataset.frame=f.id;const c=document.createElement('canvas');drawFrame(c,img,f.id,true);b.appendChild(c);const s=document.createElement('span');s.className='frame-label';s.textContent=f.name;b.appendChild(s);b.onclick=()=>{document.querySelectorAll('.frame-option').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state.frame=f.id};grid.appendChild(b)});img.src=state.photo}
-function makeResult(){const img=new Image();img.onload=()=>{drawFrame($('#resultCanvas'),img,state.frame);show('result')};img.src=state.photo}
-$('#startBtn').onclick=()=>show('capture');
-$('#cameraBtn').onclick=startCamera;
-$('#fileInput').onchange=e=>loadFile(e.target.files[0]);
-$('#applyFrameBtn').onclick=makeResult;
-$('#downloadBtn').onclick=()=>{const a=document.createElement('a');a.download='cantinho-da-nutri-reinauguracao.png';a.href=$('#resultCanvas').toDataURL('image/png');a.click();toast('Imagem salva no aparelho! ❤️')};
-$('#shareBtn').onclick=async()=>{const c=$('#resultCanvas');c.toBlob(async blob=>{const file=new File([blob],'cantinho-da-nutri.png',{type:'image/png'});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:'Eu fui ao Cantinho da Nutri! ❤️ @CANTINHO #REINAUGURAÇÃODOCANTINHO'});return}catch(e){}}await navigator.clipboard?.writeText('@CANTINHO #REINAUGURAÇÃODOCANTINHO');window.open('https://www.instagram.com/','_blank','noopener');toast('Legenda copiada. No Instagram, anexe a imagem e publique!')},'image/png')};
-$('#newPhotoBtn').onclick=()=>{state.photo=null;state.frame='classic';$('#cameraBtn').textContent='Ativar câmera';$('#cameraBtn').onclick=startCamera;show('capture')};
-$('#restartBtn').onclick=()=>show('welcome');
-document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show(b.dataset.back));
-window.addEventListener('beforeunload',stopCamera);
+(() => {
+  "use strict";
+
+  const state = { stream: null, photo: null, frame: "classic", startingCamera: false };
+  const $ = (selector) => document.querySelector(selector);
+  const screens = ["welcome", "capture", "frames", "result", "thanks"];
+  const caption = "Eu fui ao Cantinho da Nutri! ❤️ @CANTINHO #REINAUGURAÇÃODOCANTINHO";
+
+  const frames = [
+    { id: "classic", name: "Eu fui ao Cantinho", accent: "#5b321f", line: "Eu fui ao Cantinho!" },
+    { id: "botanical", name: "Nova história", accent: "#697047", line: "Faço parte dessa nova história." },
+    { id: "minimal", name: "Reinauguração 2026", accent: "#8b5d3f", line: "Reinauguração 2026" },
+    { id: "coffee", name: "Café + carinho", accent: "#7b4b30", line: "Um momento para guardar ❤️" }
+  ];
+
+  function show(id) {
+    screens.forEach((screen) => $("#" + screen).classList.toggle("active", screen === id));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (id !== "capture") stopCamera();
+    if (id === "capture" && !state.photo && !state.stream) {
+      // Não solicita câmera sem uma ação explícita: isso evita falhas silenciosas
+      // e permite que o usuário escolha a galeria se negar a permissão.
+      $("#cameraPlaceholder").style.display = "flex";
+      $("#video").style.display = "none";
+    }
+  }
+
+  let toastTimer;
+  function toast(message) {
+    const node = $("#toast");
+    node.textContent = message;
+    node.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => node.classList.remove("show"), 3200);
+  }
+
+  function stopCamera() {
+    if (state.stream) {
+      state.stream.getTracks().forEach((track) => track.stop());
+      state.stream = null;
+    }
+    const video = $("#video");
+    if (video) {
+      video.pause();
+      video.srcObject = null;
+      video.style.display = "none";
+    }
+    const placeholder = $("#cameraPlaceholder");
+    if (placeholder && !state.photo) placeholder.style.display = "flex";
+    state.startingCamera = false;
+  }
+
+  async function startCamera() {
+    if (state.startingCamera) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast("Este navegador não permite abrir a câmera aqui. Escolha uma foto da galeria ou acesse o site por HTTPS.");
+      $("#fileInput").click();
+      return;
+    }
+    stopCamera();
+    state.startingCamera = true;
+    $("#cameraBtn").disabled = true;
+    $("#cameraBtn").textContent = "Abrindo câmera…";
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: "user" }, width: { ideal: 1280 }, height: { ideal: 1280 } }
+      });
+      state.stream = stream;
+      const video = $("#video");
+      video.srcObject = stream;
+      video.style.display = "block";
+      $("#cameraPlaceholder").style.display = "none";
+      await video.play();
+      $("#cameraBtn").textContent = "Tirar foto";
+      $("#cameraBtn").onclick = captureFromVideo;
+    } catch (error) {
+      stopCamera();
+      let message = "Não foi possível abrir a câmera. Verifique a permissão ou escolha uma foto da galeria.";
+      if (error && (error.name === "NotAllowedError" || error.name === "PermissionDeniedError")) {
+        message = "A permissão da câmera foi negada. Autorize o acesso nas configurações do navegador ou escolha uma foto da galeria.";
+      } else if (error && error.name === "NotFoundError") {
+        message = "Nenhuma câmera foi encontrada. Escolha uma foto da galeria.";
+      } else if (error && error.name === "NotReadableError") {
+        message = "A câmera pode estar sendo usada por outro aplicativo. Feche-o e tente novamente.";
+      }
+      toast(message);
+      $("#cameraBtn").textContent = "Tentar abrir câmera novamente";
+      $("#cameraBtn").onclick = startCamera;
+    } finally {
+      state.startingCamera = false;
+      $("#cameraBtn").disabled = false;
+    }
+  }
+
+  function captureFromVideo() {
+    const video = $("#video");
+    if (!state.stream || !video.videoWidth || !video.videoHeight) {
+      toast("A câmera ainda está carregando. Tente novamente em alguns segundos.");
+      return;
+    }
+    const canvas = $("#captureCanvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    // Espelha a foto para corresponder à prévia de selfie.
+    context.save();
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    context.restore();
+    state.photo = canvas.toDataURL("image/jpeg", 0.94);
+    stopCamera();
+    prepareFrames();
+    show("frames");
+  }
+
+  function loadFile(file) {
+    if (!file) return;
+    if (!file.type || !file.type.startsWith("image/")) {
+      toast("Escolha um arquivo de imagem, como JPG, PNG ou WebP.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => toast("Não foi possível ler esta imagem. Tente selecionar outra.");
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        state.photo = reader.result;
+        stopCamera();
+        prepareFrames();
+        show("frames");
+      };
+      image.onerror = () => toast("Esta imagem não pôde ser aberta. Tente outra foto.");
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+    $("#fileInput").value = "";
+  }
+
+  function drawFrame(canvas, image, frameId) {
+    const W = 1200;
+    const H = 1440;
+    const footerH = 270;
+    const margin = 28;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    const selected = frames.find((frame) => frame.id === frameId) || frames[0];
+
+    ctx.fillStyle = "#f6eddc";
+    ctx.fillRect(0, 0, W, H);
+
+    // Foto em formato de capa, sem deformar a imagem original.
+    const photoH = H - footerH - margin * 2;
+    const scale = Math.max((W - margin * 2) / image.width, photoH / image.height);
+    const drawW = image.width * scale;
+    const drawH = image.height * scale;
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(margin, margin, W - margin * 2, photoH, 30);
+    ctx.clip();
+    ctx.drawImage(image, margin + ((W - margin * 2) - drawW) / 2, margin + (photoH - drawH) / 2, drawW, drawH);
+    ctx.restore();
+
+    ctx.fillStyle = selected.accent;
+    ctx.fillRect(0, H - footerH, W, footerH);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fffaf0";
+    ctx.font = "700 55px 'Playfair Display', Georgia, serif";
+    const title = frameId === "coffee" ? "CAFÉ + CARINHO" : "CANTINHO DA NUTRI";
+    ctx.fillText(title, W / 2, H - 204, W - 70);
+
+    ctx.font = "600 43px Caveat, cursive";
+    ctx.fillText(selected.line, W / 2, H - 143, W - 70);
+
+    // Hashtag e @ em tamanho maior, com ajuste automático para telas estreitas.
+    const socialText = "@CANTINHO  •  #REINAUGURAÇÃODOCANTINHO";
+    let socialSize = 31;
+    do {
+      ctx.font = `700 ${socialSize}px 'DM Sans', Arial, sans-serif`;
+      if (ctx.measureText(socialText).width <= W - 70) break;
+      socialSize -= 1;
+    } while (socialSize > 20);
+    ctx.fillStyle = "#f4dfbf";
+    ctx.fillText(socialText, W / 2, H - 65, W - 60);
+
+    ctx.strokeStyle = "#d7b889";
+    ctx.lineWidth = 7;
+    ctx.strokeRect(14, 14, W - 28, H - 28);
+  }
+
+  function prepareFrames() {
+    if (!state.photo) {
+      toast("Tire uma foto ou escolha uma imagem primeiro.");
+      show("capture");
+      return;
+    }
+    const grid = $("#frameGrid");
+    grid.replaceChildren();
+    const image = new Image();
+    image.onload = () => {
+      frames.forEach((frame, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "frame-option" + (frame.id === state.frame ? " selected" : "");
+        button.dataset.frame = frame.id;
+        button.setAttribute("aria-pressed", String(frame.id === state.frame));
+        const canvas = document.createElement("canvas");
+        canvas.setAttribute("aria-hidden", "true");
+        drawFrame(canvas, image, frame.id);
+        button.appendChild(canvas);
+        const label = document.createElement("span");
+        label.className = "frame-label";
+        label.textContent = frame.name;
+        button.appendChild(label);
+        button.addEventListener("click", () => {
+          state.frame = frame.id;
+          grid.querySelectorAll(".frame-option").forEach((option) => {
+            const selected = option.dataset.frame === frame.id;
+            option.classList.toggle("selected", selected);
+            option.setAttribute("aria-pressed", String(selected));
+          });
+        });
+        grid.appendChild(button);
+      });
+    };
+    image.onerror = () => toast("Não foi possível preparar a foto. Tente selecionar outra imagem.");
+    image.src = state.photo;
+  }
+
+  function makeResult() {
+    if (!state.photo) {
+      toast("Primeiro tire uma foto ou escolha uma imagem.");
+      show("capture");
+      return;
+    }
+    const image = new Image();
+    image.onload = () => {
+      drawFrame($("#resultCanvas"), image, state.frame);
+      show("result");
+    };
+    image.onerror = () => toast("Não foi possível criar a lembrança. Tente outra foto.");
+    image.src = state.photo;
+  }
+
+  function downloadImage() {
+    const canvas = $("#resultCanvas");
+    try {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          toast("Não foi possível exportar a imagem. Tente novamente.");
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = "cantinho-da-nutri-reinauguracao.png";
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        toast("Imagem pronta! Confira a pasta de downloads ou a galeria. ❤️");
+      }, "image/png");
+    } catch (error) {
+      toast("Seu navegador não conseguiu salvar a imagem. Use a opção Compartilhar imagem.");
+    }
+  }
+
+  async function shareImage() {
+    const canvas = $("#resultCanvas");
+    try {
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Falha ao gerar imagem")), "image/png");
+      });
+      const file = new File([blob], "cantinho-da-nutri-reinauguracao.png", { type: "image/png" });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Cantinho da Nutri e Cafeteria", text: caption });
+        return;
+      }
+      // Desktop/navegadores sem compartilhamento de arquivos: baixar a imagem e abrir o Instagram.
+      downloadImage();
+      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+      toast("A imagem foi preparada para baixar. Depois, anexe-a à publicação no Instagram.");
+    } catch (error) {
+      if (error && error.name === "AbortError") return;
+      toast("Não foi possível compartilhar diretamente. Baixe a imagem e publique pelo Instagram.");
+    }
+  }
+
+  async function copyCaption() {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(caption);
+        toast("Legenda copiada! ❤️");
+      } else {
+        const area = document.createElement("textarea");
+        area.value = caption;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        const copied = document.execCommand("copy");
+        area.remove();
+        toast(copied ? "Legenda copiada! ❤️" : caption);
+      }
+    } catch (error) {
+      toast("Copie esta legenda: " + caption);
+    }
+  }
+
+  $("#startBtn").addEventListener("click", () => show("capture"));
+  $("#cameraBtn").addEventListener("click", startCamera);
+  $("#galleryBtn").addEventListener("click", () => $("#fileInput").click());
+  $("#fileInput").addEventListener("change", (event) => loadFile(event.target.files[0]));
+  $("#applyFrameBtn").addEventListener("click", makeResult);
+  $("#downloadBtn").addEventListener("click", downloadImage);
+  $("#shareBtn").addEventListener("click", shareImage);
+  $("#copyCaptionBtn").addEventListener("click", copyCaption);
+  $("#newPhotoBtn").addEventListener("click", () => {
+    state.photo = null;
+    state.frame = "classic";
+    $("#cameraBtn").textContent = "Ativar câmera";
+    $("#cameraBtn").onclick = null;
+    show("capture");
+  });
+  $("#restartBtn").addEventListener("click", () => {
+    state.photo = null;
+    state.frame = "classic";
+    show("welcome");
+  });
+  document.querySelectorAll("[data-back]").forEach((button) => {
+    button.addEventListener("click", () => show(button.dataset.back));
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopCamera();
+  });
+  window.addEventListener("pagehide", stopCamera);
+})();
