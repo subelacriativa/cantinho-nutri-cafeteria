@@ -64,7 +64,9 @@
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: { facingMode: { ideal: "user" }, width: { ideal: 1280 }, height: { ideal: 1280 } }
+        video: {
+  facingMode: { ideal: "user" }
+}
       });
       state.stream = stream;
       const video = $("#video");
