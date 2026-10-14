@@ -43,7 +43,14 @@ h2{font-size:31px;margin-bottom:10px}
 .muted{color:#765f50;line-height:1.5}
 .camera-wrap{margin-top:24px}
 .camera-card{width:100%;aspect-ratio:1/1;background:#efe2cd;border:1px solid rgba(91,50,31,.12);border-radius:24px;overflow:hidden;box-shadow:var(--shadow);position:relative;display:flex;align-items:center;justify-content:center}
-.camera-card video{width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)}
+.camera-card video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: none;
+  transform: scaleX(-1);
+  background: #efe2cd;
+}
 #captureCanvas{display:none}
 .camera-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--brown);padding:40px;background:linear-gradient(145deg,#f8efdf,#ead9bd)}
 .camera-placeholder span{font-size:54px;margin-bottom:10px}
