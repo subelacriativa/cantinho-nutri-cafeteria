@@ -312,7 +312,19 @@
   }
 
   $("#startBtn").addEventListener("click", () => show("capture"));
-  $("#cameraBtn").addEventListener("click", startCamera);
+  $("#cameraBtn").addEventListener("click", () => {
+  const video = $("#video");
+
+  if (
+    state.stream &&
+    video.srcObject &&
+    video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+  ) {
+    captureFromVideo();
+  } else {
+    startCamera();
+  }
+});
   $("#galleryBtn").addEventListener("click", () => $("#fileInput").click());
   $("#fileInput").addEventListener("change", (event) => loadFile(event.target.files[0]));
   $("#applyFrameBtn").addEventListener("click", makeResult);
