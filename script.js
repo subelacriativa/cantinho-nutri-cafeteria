@@ -171,7 +171,7 @@
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#fffaf0";
     ctx.font = "700 55px 'Playfair Display', Georgia, serif";
-    const title = frameId === "coffee" ? "CAFÉ + CARINHO" : "CANTINHO DA NUTRI";
+    const title = frameId === "coffee" ? "CAFÉ + CARINHO" : "Cantinho da Nutri Cafeteria";
     ctx.fillText(title, W / 2, H - 204, W - 70);
 
     ctx.font = "600 65px Caveat, cursive";
