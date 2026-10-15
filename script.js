@@ -7,7 +7,7 @@
   const caption = "Eu fui ao Cantinho da Nutri! ❤️ @cantinhodanutricafeteria #VocêNoCantinho";  
 
   const frames = [
-    { id: "classic", name: "Eu fui ao Cantinho", accent: "#5b321f", fontSize: "45px",  line: "Eu fui ao Cantinho!" },
+    { id: "classic", name: "Eu fui ao Cantinho", accent: "#5b321f", line: "Eu fui ao Cantinho!", fontSize: "45px"},
     { id: "botanical", name: "Nova história", accent: "#697047", line: "Faço parte dessa nova história." },
     { id: "minimal", name: "Reinauguração 2026", accent: "#8b5d3f", line: "Reinauguração 2026" },
     { id: "coffee", name: "Café + carinho", accent: "#7b4b30", line: "Um momento para guardar ❤️" }
