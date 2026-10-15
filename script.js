@@ -174,7 +174,7 @@
     const title = frameId === "coffee" ? "CAFÉ + CARINHO" : "CANTINHO DA NUTRI";
     ctx.fillText(title, W / 2, H - 204, W - 70);
 
-    ctx.font = "600 43px Caveat, cursive";
+    ctx.font = "600 55px Caveat, cursive";
     ctx.fillText(selected.line, W / 2, H - 143, W - 70);
 
     // Hashtag e @ em tamanho maior, com ajuste automático para telas estreitas.
